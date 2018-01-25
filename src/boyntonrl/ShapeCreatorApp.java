@@ -2,7 +2,11 @@ package boyntonrl;
 
 import edu.msoe.se1010.winPlotter.WinPlotter;
 import java.awt.Color;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -11,6 +15,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import javax.swing.*;
 
 public class ShapeCreatorApp extends WinPlotter { // extends application
 
@@ -27,7 +33,8 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
 //        launch(args);
 //    }
 
-    private static Scanner fileIn;
+    private Scanner fileIn;
+//    public enum ShapeType {POINT, CIRCLE, TRIANGLE, RECTANGLE, LABLED_TRIANGLE, LABELED_RECTANGLE}
 
     /**
      *  The main program, a class method, that creates a ShapeLoaderApp instance and calls the
@@ -35,11 +42,20 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
      * @param args args passed to main method
      */
     public static void main(String[] args) {
+        JFrame frame = new JFrame("InputDialog Example #2");
+        String fileName = JOptionPane.showInputDialog(
+                frame,
+                "Enter an input text file to create a picture!",
+                "Create A New Picture",
+                JOptionPane.INFORMATION_MESSAGE);
         // prompt for file
+        Path path = Paths.get(fileName);
+        File file = new File(path.toString());
         //attach scanner to file
+
         //create app instance
         ShapeCreatorApp app;
-        try {
+        try (Scanner fileIn = new Scanner(file)){
             app = new ShapeCreatorApp(fileIn);
         } catch (Exception e) {
             // print something went wrong
@@ -47,17 +63,44 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
         }
     }
 
-    private static Shape parseShape(String line) throws IllegalArgumentException {
+    private static Shape parseShape(String shapeInfo) throws IllegalArgumentException {
         Shape shape;
+        String[] infoPieces = shapeInfo.split("\\s+");
+        String shapeType = infoPieces[0];
+        double x = Double.parseDouble(infoPieces[1]);
+        double y = Double.parseDouble(infoPieces[2]);
+        Color color = hex2Rgb(infoPieces[3]);
 
+        if (shapeType.equals("P:")) { // point
+            shape = new Point(x, y, color);
+        } else if (shapeType.equals("C:")) { // circle
+            double radius = Double.parseDouble(infoPieces[4]);
+            shape = new Circle(x, y, radius, color);
+        } else if (shapeType.equals("T:")) { // triangle
+            double base = Double.parseDouble(infoPieces[4]);
+            double height = Double.parseDouble(infoPieces[5]);
+            shape = new Triangle(x, y, base, height, color);
+        } else if (shapeType.equals("R:")) { // rectangle
+            double width = Double.parseDouble(infoPieces[4]);
+            double height = Double.parseDouble(infoPieces[5]);
+            shape = new Rectangle(x, y, width, height, color);
+        } else if (shapeType.equals("LT:")) { // labeled trianle
+            double base = Double.parseDouble(infoPieces[4]);
+            double height = Double.parseDouble(infoPieces[5]);
+            String[] nameWords = Arrays.copyOfRange(infoPieces, 6, infoPieces.length);
+            String name = String.join("", nameWords);
+            shape = new LabeledTriangle(x, y, base, height, color, name);
+        }  else if (shapeType.equals("LR:")) { // labeled rectangle
+            double width = Double.parseDouble(infoPieces[4]);
+            double height = Double.parseDouble(infoPieces[5]);
+            String[] nameWords = Arrays.copyOfRange(infoPieces, 6, infoPieces.length);
+            String name = String.join("", nameWords);
+            shape = new LabeledRectangle(x, y, width, height, color, name);
+        } else {
+            throw new IllegalArgumentException("Bad formatting shape");
+        }
 
         return shape;
-    }
-
-    private static Color stringToColor(String hexColor) throws InputMismatchException {
-        Color c;
-
-        return c;
     }
 
     /**
@@ -70,6 +113,7 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
      */
     public ShapeCreatorApp(Scanner fileIn) throws IllegalArgumentException {
         super();
+        this.fileIn = fileIn;
         String title = "";
         String dimensions = "";
         String backgroundColor = "";
@@ -118,7 +162,7 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
      * @param colorStr e.g. "#FFFFFF"
      * @return
      */
-    private Color hex2Rgb(String colorStr) {
+    private static Color hex2Rgb(String colorStr) {
         return new Color(
                 Integer.valueOf( colorStr.substring( 1, 3 ), 16 ),
                 Integer.valueOf( colorStr.substring( 3, 5 ), 16 ),
