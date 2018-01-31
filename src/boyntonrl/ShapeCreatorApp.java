@@ -49,17 +49,21 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
                 "Create A New Picture",
                 JOptionPane.INFORMATION_MESSAGE);
         // prompt for file
+        System.out.println(fileName);
         Path path = Paths.get(fileName);
         File file = new File(path.toString());
         //attach scanner to file
-
+        ArrayList<Shape> shapes;
         //create app instance
         ShapeCreatorApp app;
         try (Scanner fileIn = new Scanner(file)){
             app = new ShapeCreatorApp(fileIn);
+            shapes = app.readShapes(fileIn);
+            app.drawShapes(shapes);
         } catch (Exception e) {
             // print something went wrong
             e.printStackTrace();
+            System.out.println("baaaaaad");
         }
     }
 
@@ -84,7 +88,7 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
             double width = Double.parseDouble(infoPieces[4]);
             double height = Double.parseDouble(infoPieces[5]);
             shape = new Rectangle(x, y, width, height, color);
-        } else if (shapeType.equals("LT:")) { // labeled trianle
+        } else if (shapeType.equals("LT:")) { // labeled triangle
             double base = Double.parseDouble(infoPieces[4]);
             double height = Double.parseDouble(infoPieces[5]);
             String[] nameWords = Arrays.copyOfRange(infoPieces, 6, infoPieces.length);
@@ -121,32 +125,36 @@ public class ShapeCreatorApp extends WinPlotter { // extends application
             switch (i) {
                 case 0 :
                     title = fileIn.nextLine();
+                    break;
                 case 1 :
                     dimensions = fileIn.nextLine();
+                    break;
                 case 2 :
                     backgroundColor = fileIn.nextLine();
+                    break;
             }
         }
         this.setWindowTitle(title);
         // get x and y values seperated by space
-        String[] xAndY = dimensions.split("\\s+");
-        this.setWindowSize(Integer.valueOf(xAndY[0]), Integer.valueOf(xAndY[1])); // get x and y 
+        String[] xAndY = dimensions.split(" ");
+        this.setWindowSize(Integer.valueOf(xAndY[0]), Integer.valueOf(xAndY[1])); // get x and y
         this.setBackgroundColor(Integer.valueOf(backgroundColor.substring( 1, 3 ), 16 ), //red
                 Integer.valueOf(backgroundColor.substring( 3, 5 ), 16 ), //green
                 Integer.valueOf(backgroundColor.substring( 5, 7 ), 16 ) ); // blue
+
     }
 
     private ArrayList<Shape> readShapes(Scanner fileIn) {
         ArrayList<Shape> shapes = new ArrayList<>();
-
-        while (fileIn.hasNextLine()) {
+        String shapeSpec = "";
+        do {
             try {
-                String shapeSpec = fileIn.nextLine();
-
+                shapeSpec = fileIn.nextLine();
+                shapes.add(parseShape(shapeSpec));
             } catch (IllegalArgumentException e){
-
+                System.out.println("Shape specified by line <" + shapeSpec + "> is not valid");
             }
-        }
+        } while (fileIn.hasNextLine());
 
         return shapes;
     }
