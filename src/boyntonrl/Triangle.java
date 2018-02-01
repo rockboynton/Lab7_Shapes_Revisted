@@ -34,6 +34,9 @@ public class Triangle extends Shape {
                     double height,
                     Color color) {
         super(x, y, color);
+        if (base < 0 || height < 0) {
+            throw new IllegalArgumentException("non-positive dimension");
+        }
         this.base = base;
         this.height = height;
     }

@@ -31,6 +31,9 @@ public class Circle extends Shape{
                   double radius,
                   Color color) {
         super(x, y, color);
+        if (radius < 0) {
+            throw new IllegalArgumentException("non-positive dimension");
+        }
         this.radius = radius;
     }
 

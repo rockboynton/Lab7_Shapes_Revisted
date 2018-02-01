@@ -29,6 +29,9 @@ public abstract class Shape {
      * @param color the java.awt.Color for this Shape
      */
     public Shape(double x, double y, Color color) {
+        if (x < 0 || y < 0) {
+            throw new IllegalArgumentException("non-positive dimension");
+        }
         this.x = x;
         this.y = y;
         this.color = color;
